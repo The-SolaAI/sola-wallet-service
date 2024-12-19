@@ -1,1 +1,3 @@
 site-packages
+.env
+.pyc
