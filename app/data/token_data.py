@@ -1,0 +1,3 @@
+TOKENS = {
+    "USDC": {"MINT": "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU", "DECIMALS": 6}
+}
