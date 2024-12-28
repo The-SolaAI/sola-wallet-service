@@ -1,11 +1,11 @@
-use std::str::FromStr;
+use std::{ops::Deref, str::FromStr};
 use jupiter_swap_api_client::{
     quote::QuoteRequest,
     swap::SwapRequest,
     transaction_config::TransactionConfig,
     JupiterSwapApiClient,
 };
-use solana_sdk::{pubkey::Pubkey, transaction::VersionedTransaction};
+use solana_sdk::{pubkey::Pubkey, signature::NullSigner, transaction::VersionedTransaction};
 use axum::{extract ,routing::{get, post}, Json, Router};
 use serde_json::{json, Value};
 use serde::Deserialize;
@@ -51,8 +51,10 @@ async fn swap(input_mint:String, output_mint:String, public_key:String, amount:u
         .unwrap();
 
     let versioned_transaction: VersionedTransaction = bincode::deserialize(&swap_response.swap_transaction).unwrap();
+    let signer = NullSigner::new(&Pubkey::from_str(public_key.as_str()).unwrap());
+    let tx = VersionedTransaction::try_new(versioned_transaction.message, &[&signer]).unwrap();
 
-    versioned_transaction
+    tx
 }
 
 pub fn swap_router() ->Router{
