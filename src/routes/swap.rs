@@ -1,35 +1,30 @@
-use std::{ops::Deref, str::FromStr};
+use std::str::FromStr;
 use jupiter_swap_api_client::{
     quote::QuoteRequest,
     swap::SwapRequest,
     transaction_config::TransactionConfig,
     JupiterSwapApiClient,
 };
-use solana_sdk::{pubkey::Pubkey, signature::NullSigner, transaction::VersionedTransaction};
-use axum::{extract ,routing::{get, post}, Json, Router};
+use solana_sdk::pubkey::Pubkey;
+use axum::{extract , Json};
 use serde_json::{json, Value};
 use serde::Deserialize;
 
 #[derive(Deserialize)]
-struct SwapParams {
+pub struct SwapParams {
     input_mint: String,
     output_mint: String,
     public_key: String,
     amount: u64
 }
 
-
-async fn health()->Json<Value>{
-    Json(json!({"status":"healthy"}))
-}
-
-async fn swap_handler(extract::Json(payload): extract::Json<SwapParams>)-> Json<Value>{
+pub async fn swap_handler(extract::Json(payload): extract::Json<SwapParams>)-> Json<Value>{
     let txn = swap(payload.input_mint,payload.output_mint,payload.public_key,payload.amount).await;
     Json(json!({"transaction":&txn}))
 
 }
 
-async fn swap(input_mint:String, output_mint:String, public_key:String, amount:u64) -> VersionedTransaction{
+async fn swap(input_mint:String, output_mint:String, public_key:String, amount:u64) -> Vec<u8>{
     let jupiter_swap_api_client = JupiterSwapApiClient::new("https://quote-api.jup.ag/v6".to_string());
     let quote_request = QuoteRequest {
         amount: amount,
@@ -39,7 +34,7 @@ async fn swap(input_mint:String, output_mint:String, public_key:String, amount:u
         ..QuoteRequest::default()
     };
 
-    
+
     let quote_response = jupiter_swap_api_client.quote(&quote_request).await.unwrap();
     let swap_response = jupiter_swap_api_client
         .swap(&SwapRequest {
@@ -50,15 +45,6 @@ async fn swap(input_mint:String, output_mint:String, public_key:String, amount:u
         .await
         .unwrap();
 
-    let versioned_transaction: VersionedTransaction = bincode::deserialize(&swap_response.swap_transaction).unwrap();
-    let signer = NullSigner::new(&Pubkey::from_str(public_key.as_str()).unwrap());
-    let tx = VersionedTransaction::try_new(versioned_transaction.message, &[&signer]).unwrap();
-
-    tx
+    swap_response.swap_transaction
 }
 
-pub fn swap_router() ->Router{
-    Router::new()
-        .route("/swap", post(swap_handler))
-        .route("/health",get(health))
-}
