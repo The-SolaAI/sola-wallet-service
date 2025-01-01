@@ -1,3 +1,2 @@
-site-packages
+target
 .env
-.pyc
