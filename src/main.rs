@@ -18,7 +18,7 @@ async fn main() {
         .allow_headers(Any);
 
     let app = Router::new()
-        .nest("/api", routes::router::swap_router())
+        .nest("/api/wallet", routes::router::swap_router())
         .layer(cors)
         .layer(TraceLayer::new_for_http());
 

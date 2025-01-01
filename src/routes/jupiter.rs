@@ -6,7 +6,7 @@ use jupiter_swap_api_client::{
     JupiterSwapApiClient,
 };
 use solana_sdk::pubkey::Pubkey;
-use axum::{extract , Json};
+use axum::{extract, routing::post, Json, Router};
 use serde_json::{json, Value};
 use serde::Deserialize;
 
@@ -18,13 +18,16 @@ pub struct SwapParams {
     amount: u64
 }
 
-pub async fn swap_handler(extract::Json(payload): extract::Json<SwapParams>)-> Json<Value>{
+async fn swap_handler(extract::Json(payload): extract::Json<SwapParams>)-> Json<Value>{
     let txn = swap(payload.input_mint,payload.output_mint,payload.public_key,payload.amount).await;
     Json(json!({"transaction":&txn}))
-
 }
 
-async fn swap(input_mint:String, output_mint:String, public_key:String, amount:u64) -> Vec<u8>{
+async fn swap(
+    input_mint:String, 
+    output_mint:String, 
+    public_key:String, 
+    amount:u64) -> Vec<u8>{
     let jupiter_swap_api_client = JupiterSwapApiClient::new("https://quote-api.jup.ag/v6".to_string());
     let quote_request = QuoteRequest {
         amount: amount,
@@ -47,4 +50,9 @@ async fn swap(input_mint:String, output_mint:String, public_key:String, amount:u
 
     swap_response.swap_transaction
 }
+
+pub fn swap_router() -> Router {
+    Router::new().route("/swap", post(swap_handler))
+}
+
 

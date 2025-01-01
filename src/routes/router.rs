@@ -1,6 +1,6 @@
-use super::swap;
-
-use axum::{routing::{get, post}, Json, Router};
+use super::jupiter;
+use super::lulo;
+use axum::{routing::get, Json, Router};
 use serde_json::{Value,json};
 
 async fn health()->Json<Value>{
@@ -9,6 +9,7 @@ async fn health()->Json<Value>{
 
 pub fn swap_router() ->Router{
     Router::new()
-        .route("/swap", post(swap::swap_handler))
-        .route("/swap/health",get(health))
+        .route("/health", get(health))
+        .nest("/jup", jupiter::swap_router())
+        .nest("/lulo", lulo::lulo_router())
 }
