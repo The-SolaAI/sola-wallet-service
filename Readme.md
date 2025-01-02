@@ -10,7 +10,7 @@
 
 `POST /api/wallet/lulo/update`
 
-GET /api/wallet/lulo/balance
+`GET /api/wallet/lulo/balance`
 
 
 ### Jupiter Endpoints
