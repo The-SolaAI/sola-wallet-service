@@ -4,20 +4,20 @@
 
 ### Lulo Endpoints
 
-POST /api/wallet/lulo/deposit
+`POST /api/wallet/lulo/deposit`
 
-POST /api/wallet/lulo/withdraw
+`POST /api/wallet/lulo/withdraw`
 
-POST /api/wallet/lulo/update
+`POST /api/wallet/lulo/update`
 
 GET /api/wallet/lulo/balance
 
 
 ### Jupiter Endpoints
 
-POST /api/wallet/jupiter/swap
+`POST /api/wallet/jupiter/swap`
 
-POST /api/wallet/jupiter/limit (TBA)
+`POST /api/wallet/jupiter/limit (TBA)`
 
 ## To use
 
