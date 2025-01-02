@@ -1,14 +1,10 @@
+mod instructions;
 mod routes;
-use axum::{
-    http::Method, Router
-};
+use axum::{http::Method, Router};
 
 use tower_http::{
-    cors::CorsLayer,
-    cors::Any,
-    trace::TraceLayer
+    cors::{Any, CorsLayer}, trace::TraceLayer
 };
-
 
 #[tokio::main]
 async fn main() {
@@ -18,11 +14,15 @@ async fn main() {
         .allow_headers(Any);
 
     let app = Router::new()
-        .nest("/api/wallet", routes::router::swap_router())
+        .nest(
+            "/api/wallet",
+            routes::router::swap_router(),
+        )
         .layer(cors)
         .layer(TraceLayer::new_for_http());
 
-    
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:5000").await.unwrap();
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:5000")
+        .await
+        .unwrap();
     axum::serve(listener, app).await.unwrap();
 }

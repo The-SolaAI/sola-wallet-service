@@ -6,3 +6,4 @@ imports_layout = "Horizontal"
 wrap_comments = true
 brace_style = "SameLineWhere"
 fn_params_layout = "Vertical"
+fn_call_width = 30
