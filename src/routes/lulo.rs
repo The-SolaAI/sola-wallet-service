@@ -1,13 +1,14 @@
-use std::ptr::null;
-
-use axum::{extract, routing::post, Json, Router};
+use axum::{extract, http::request, routing::{get, post}, Json, Router};
 use chttp::{prelude::Request, Body, ResponseExt};
 use dotenv::dotenv;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, to_string, Value};
 use solana_sdk::pubkey;
 
-use crate::routes::lulo;
+#[derive(Deserialize)]
+struct UserAssetsParams {
+    owner: String,
+}
 
 #[derive(Deserialize)]
 struct DepositParams {
@@ -30,6 +31,42 @@ struct UpdateParams {
     allowedProtocols: String,
 }
 
+
+async fn user_assets(
+    owner:String,
+) -> Json<Value> {
+    dotenv().ok();
+    let lulo_api_key = std::env::var("LULO_API_KEY").unwrap();
+    let url = "https://api.flexlend.fi/account";
+
+    let api_request = Request::get(url)
+    .header("x-wallet-pubkey", owner)
+    .header("x-api-key", lulo_api_key)
+    .body(())
+    .unwrap();
+
+    let mut response = chttp::send(api_request).unwrap();
+    let result = response.text().unwrap();
+    let parsed_result: Value = serde_json::from_str(&result).unwrap();
+    let token_balance = parsed_result["data"]["tokenBalances"].as_array().unwrap();
+    let total_value = parsed_result["data"]["totalValue"].as_f64().unwrap();
+    let interest_earned = parsed_result["data"]["interestEarned"].as_f64().unwrap();
+    let deposit_value = total_value - interest_earned;
+    Json(json!({
+        "tokenBalance": token_balance,
+        "totalValue": total_value,
+        "depositValue": deposit_value,
+        "interestEarned": interest_earned,
+    }))
+}
+
+async fn user_assets_handler(
+    extract::Json(params): extract::Json<UserAssetsParams>
+) -> Json<Value> {
+    user_assets(params.owner).await
+}
+
+
 async fn deposit(
     owner: String,
     mintAddress: String,
@@ -47,7 +84,7 @@ async fn deposit(
         "depositAmount": depositAmount
     });
     let payload = to_string(&payload_json).unwrap();
-    let request = Request::post(url)
+    let api_request = Request::post(url)
         .header("Accept", "application/json")
         .header("Content-Type", "application/json")
         .header("x-wallet-pubkey", owner)
@@ -55,7 +92,7 @@ async fn deposit(
         .body(Body::from(payload))
         .unwrap();
 
-    let mut response = chttp::send(request).unwrap();
+    let mut response = chttp::send(api_request).unwrap();
     let result = response.text().unwrap();
 
     let parsed_result: Value = serde_json::from_str(&result).unwrap();
@@ -88,7 +125,7 @@ async fn withdraw(
         "withdrawAll": withdrawAll
     });
     let payload = to_string(&payload_json).unwrap();
-    let request = Request::post(url)
+    let api_request = Request::post(url)
         .header("Accept", "application/json")
         .header("Content-Type", "application/json")
         .header("x-wallet-pubkey", owner)
@@ -96,7 +133,7 @@ async fn withdraw(
         .body(Body::from(payload))
         .unwrap();
 
-    let mut response = chttp::send(request).unwrap();
+    let mut response = chttp::send(api_request).unwrap();
     let result = response.text().unwrap();
 
     let parsed_result: Value = serde_json::from_str(&result).unwrap();
@@ -131,7 +168,7 @@ async fn update(
         "minimumRate":0
     });
     let payload = to_string(&payload_json).unwrap();
-    let request = Request::post(url)
+    let api_request = Request::post(url)
         .header("Accept", "application/json")
         .header("Content-Type", "application/json")
         .header("x-wallet-pubkey", owner)
@@ -139,7 +176,7 @@ async fn update(
         .body(Body::from(payload))
         .unwrap();
 
-    let mut response = chttp::send(request).unwrap();
+    let mut response = chttp::send(api_request).unwrap();
     let result = response.text().unwrap();
 
     let parsed_result: Value = serde_json::from_str(&result).unwrap();
@@ -156,6 +193,7 @@ async fn update_handler(extract::Json(params): extract::Json<UpdateParams>) -> J
 
 pub fn lulo_router() -> Router {
     Router::new()
+        .route("/assets", get(user_assets_handler))
         .route("/deposit", post(deposit_handler))
         .route("/withdraw", post(withdraw_handler))
         .route("/update", post(update_handler))
