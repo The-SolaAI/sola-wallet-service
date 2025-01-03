@@ -6,10 +6,6 @@ use serde_json::Value;
 
 use serde::Deserialize;
 
-#[derive(Deserialize)]
-struct UserAssetsParams {
-    owner: String,
-}
 
 #[derive(Deserialize)]
 struct DepositParams {
@@ -33,9 +29,9 @@ struct UpdateParams {
 }
 
 async fn user_assets_handler(
-    extract::Json(params): extract::Json<UserAssetsParams>
+    extract::Path(owner): extract::Path<String>
 ) -> Json<Value> {
-    user_assets(params.owner).await
+    user_assets(owner).await
 }
 async fn deposit_handler(extract::Json(params): extract::Json<DepositParams>) -> Json<Value> {
     deposit(
