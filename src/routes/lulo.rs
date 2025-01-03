@@ -66,7 +66,7 @@ async fn update_handler(extract::Json(params): extract::Json<UpdateParams>) -> J
 pub fn lulo_router() -> Router {
     Router::new()
         .route(
-            "/assets/:owner",
+            "/assets",
             get(user_assets_handler),
         )
         .route(
