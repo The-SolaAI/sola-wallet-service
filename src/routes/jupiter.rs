@@ -12,7 +12,7 @@ struct SwapParams {
     amount: u64,
 }
 
-async fn swap_handler(extract::Json(payload): extract::Json<SwapParams>) -> Json<Value> {
+pub async fn swap_handler(extract::Json(payload): extract::Json<SwapParams>) -> Json<Value> {
     let txn = jupiter_instructions::swap(
         payload.input_mint,
         payload.output_mint,
