@@ -1,15 +1,11 @@
-
-FROM python:3.10-slim
-
-WORKDIR /app
-
-
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY . .
-
+FROM rust:latest
+WORKDIR /app/sola-wallet-service
+COPY Cargo.toml Cargo.lock ./
+COPY ./src ./src
+RUN cargo fetch
 
 EXPOSE 8000
 
-CMD ["uvicorn", "app.main:app", "--reload", "--host", "127.0.0.1", "--port", "8000"]
+RUN cargo build --release
+
+CMD ["cargo", "run", "--release"]
